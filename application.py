@@ -10,6 +10,10 @@ OpenAI: Connect to LLM
 import streamlit as sl
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 sl.set_page_config(
     page_title = "AI-CSV",
@@ -45,6 +49,15 @@ if file is not None:
     sl.dataframe(df.describe())
 
     numeric_columns = df.select_dtypes(include="number").columns.tolist()
+
+    summary = {
+        "rows" : len(df),
+        "columns" : len(df.columns),
+        "missing_values" : int(df.isnull().sum().sum()),
+        "numeric_columns" : numeric_columns
+    }
+    
+    stats = df.describe().to_string()
 
     if numeric_columns:
         sl.subheader("Data Visualizations")
