@@ -31,13 +31,13 @@ if file is not None:
     col1, col2, col3 = sl.columns(3)
 
     with col1:
-        sl.metric("Rows")
+        sl.metric("Rows", df.shape[0])
 
     with col2:
-        sl.metric("Columns")
+        sl.metric("Columns", df.shape[1])
 
     with col3:
-        sl.metric("Missing values", df.isnull().sum())
+        sl.metric("Missing values", df.isnull().sum().sum())
 
     sl.subheader("Dataset Preview")
     sl.dataframe(df)
@@ -56,4 +56,4 @@ if file is not None:
         gph.set_ylabel("Frequency")
         gph.set_title(f"Distribution of {selected_column}")
 
-        
+        sl.pyplot(fig)
