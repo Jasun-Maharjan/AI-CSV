@@ -63,31 +63,31 @@ if file is not None:
         "Ask a question about your dataset:",
         placeholder="e.g. What is the average revenue?"
     )
+    if question:
+        response = ollama.chat(
+        model="llama3.2",
+        messages=[{
+                "role": "system",
+                "content": """You are AI-CSV, an AI data analysis assistant.
+                Explain data analysis results clearly and concisely.
+                Only use the information provided to you.
+                Never invent numbers or statistics."""
+            },
+            {
+                "role": "user",
+                "content": f"""
+                Dataset columns: {df.columns.tolist()}
+                Statistical summary:{stats}
+                User question:{question}
 
-    response = ollama.chat(
-    model="llama3.2",
-    messages=[{
-            "role": "system",
-            "content": """You are AI-CSV, an AI data analysis assistant.
-            Explain data analysis results clearly and concisely.
-            Only use the information provided to you.
-            Never invent numbers or statistics."""
-        },
-        {
-            "role": "user",
-            "content": f"""
-            Dataset columns: {df.columns.tolist()}
-            Statistical summary:{stats}
-            User question:{question}
+                Explain the result to the user in a clear and useful way.
+                """
+            }
+        ]
+        )
 
-            Explain the result to the user in a clear and useful way.
-            """
-        }
-    ]
-    )
-
-    answer = response["message"]["content"]
-    sl.write(answer)
+        answer = response["message"]["content"]
+        sl.write(answer)
 
     if numeric_columns:
         sl.subheader("Data Visualizations")
