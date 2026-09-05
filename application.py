@@ -66,6 +66,22 @@ if file is not None:
         placeholder="e.g. What is the average revenue?"
     )
 
+    if question:
+        response = client.responses.create(
+            model = "gpt-5-mini",
+            input = f"""
+You are an AI called AI-CSV.
+The user uploaded a .csv dataset.
+Dataset columns:{df.columns.tolist()}
+Statistical summary:{stats}
+User question:{question}
+Answer the user's question clearly and concisely.
+If the provided information is insufficient to answer the question,
+say that you cannot determine the answer from the available information.
+            """
+        )
+        sl.write(response.output_text)
+
     if numeric_columns:
         sl.subheader("Data Visualizations")
         selected_column = sl.selectbox("select a column to visualize",numeric_columns)
