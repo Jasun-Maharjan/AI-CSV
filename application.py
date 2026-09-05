@@ -12,6 +12,37 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import ollama
 
+def analyze_dataset(df, question):
+    question = question.lower()
+
+    result = ""
+
+    if "average revenue" in question:
+        if "Revenue" in df.columns:
+            average = df["Revenue"].mean()
+            result = f"Average revenue: {average:.2f}"
+
+    elif "most revenue" in question or "highest revenue" in question:
+        if "Product" in df.columns and "Revenue" in df.columns:
+            revenue_by_product = df.groupby("Product")["Revenue"].sum()
+            top_product = revenue_by_product.idxmax()
+            top_revenue = revenue_by_product.max()
+
+            result = (
+                f"Revenue by product:\n"
+                f"{revenue_by_product.to_string()}\n\n"
+                f"Top product: {top_product}\n"
+                f"Total revenue: {top_revenue:.2f}"
+            )
+
+    elif "missing" in question:
+        missing = df.isnull().sum()
+        result = f"Missing values:\n{missing.to_string()}"
+
+    else:
+        result = df.describe().to_string()
+
+    return result
 
 sl.set_page_config(
     page_title = "AI-CSV",
@@ -64,6 +95,7 @@ if file is not None:
         placeholder="e.g. What is the average revenue?"
     )
     if question:
+        analysis_result = analyze_dataset(df, question)
         response = ollama.chat(
         model="llama3.2",
         messages=[{
@@ -79,6 +111,7 @@ if file is not None:
                 Dataset columns: {df.columns.tolist()}
                 Statistical summary:{stats}
                 User question:{question}
+                Analysis performed by Python/Pandas:{analysis_result}
 
                 Explain the result to the user in a clear and useful way.
                 """
