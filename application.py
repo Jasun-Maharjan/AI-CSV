@@ -44,6 +44,24 @@ def analyze_dataset(df, question):
 
     return result
 
+def data_visualization(chart_type):
+    selected_column = sl.selectbox("select a column to visualize",numeric_columns)
+    if chart_type == "Histogram":
+        fig, gph = plt.subplots()
+        gph.hist(df[selected_column].dropna())
+        gph.set_xlabel(selected_column)
+        gph.set_ylabel("Frequency")
+        gph.set_title(f"Distribution of {selected_column}")
+        sl.pyplot(fig)
+
+    elif chart_type == "Box Plot":
+        fig, gph = plt.subplots()
+        gph.boxplot(df[selected_column].dropna())
+        gph.set_ylabel(selected_column)
+        gph.set_title(f"Box Plot of {selected_column}")
+        sl.pyplot(fig)
+
+
 sl.set_page_config(
     page_title = "AI-CSV",
     layout = "wide"
@@ -79,6 +97,14 @@ if file is not None:
 
     sl.write(f"Numerical columns: {len(numeric_columns)}")
     sl.write(f"Categorical columns: {len(categorical_columns)}")
+
+    if df.isnull().sum().sum()!=0:
+        missing_values = df.isnull().sum()
+
+        for column, count in missing_values.items():
+
+            if count > 0:
+                sl.write(f"• {column} contains {count} missing values")
 
     sl.subheader("Dataset Preview")
     sl.dataframe(df)
@@ -138,12 +164,8 @@ if file is not None:
 
     if numeric_columns:
         sl.subheader("Data Visualizations")
-        selected_column = sl.selectbox("select a column to visualize",numeric_columns)
-
-        fig, gph = plt.subplots()
-        gph.hist(df[selected_column].dropna())
-        gph.set_xlabel(selected_column)
-        gph.set_ylabel("Frequency")
-        gph.set_title(f"Distribution of {selected_column}")
-
-        sl.pyplot(fig)
+        chart_type = sl.selectbox(
+            "Choose visualization",
+            ["Histogram", "Box Plot"]
+        )
+        data_visualization(chart_type)
