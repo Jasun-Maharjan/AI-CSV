@@ -72,19 +72,20 @@ if file is not None:
     with col3:
         sl.metric("Missing values", df.isnull().sum().sum())
 
+    numeric_columns = df.select_dtypes(include="number").columns.tolist()
+    categorical_columns = df.select_dtypes(
+        include="object"
+    ).columns.tolist()
+
+    sl.write(f"Numerical columns: {len(numeric_columns)}")
+    sl.write(f"Categorical columns: {len(categorical_columns)}")
+
     sl.subheader("Dataset Preview")
     sl.dataframe(df)
     sl.subheader("Stat summary")
     sl.dataframe(df.describe())
 
-    numeric_columns = df.select_dtypes(include="number").columns.tolist()
-
-    summary = {
-        "rows" : len(df),
-        "columns" : len(df.columns),
-        "missing_values" : int(df.isnull().sum().sum()),
-        "numeric_columns" : numeric_columns
-    }
+    
 
     stats = df.describe().to_string()
 
@@ -95,32 +96,45 @@ if file is not None:
         placeholder="e.g. What is the average revenue?"
     )
     if question:
-        analysis_result = analyze_dataset(df, question)
-        response = ollama.chat(
-        model="llama3.2",
-        messages=[{
-                "role": "system",
-                "content": """You are AI-CSV, an AI data analysis assistant.
-                Explain data analysis results clearly and concisely.
-                Only use the information provided to you.
-                Never invent numbers or statistics."""
-            },
-            {
-                "role": "user",
-                "content": f"""
-                Dataset columns: {df.columns.tolist()}
-                Statistical summary:{stats}
-                User question:{question}
-                Analysis performed by Python/Pandas:{analysis_result}
+        with sl.spinner("Analyzing your dataset..."):
+            try:
+                analysis_result = analyze_dataset(df, question)
+                response = ollama.chat(
+                model="llama3.2",
+                messages=[{
+                        "role": "system",
+                        "content": """You are AI-CSV, an AI data analysis assistant.
 
-                Explain the result to the user in a clear and useful way.
-                """
-            }
-        ]
-        )
+                        Explain the analysis result clearly and concisely.
 
-        answer = response["message"]["content"]
-        sl.write(answer)
+                        Only use the information provided.
+                        Never invent numbers or statistics.
+                        Python/Pandas has already performed the calculations.
+                        Your job is to explain the result in natural language.
+
+                        Do not use backticks, code formatting, or Markdown styling.
+                        Use plain text only."""
+                    },
+                    {
+                        "role": "user",
+                        "content": f"""
+                        Dataset columns: {df.columns.tolist()}
+                        Statistical summary:{stats}
+                        User question:{question}
+                        Analysis performed by Python/Pandas:{analysis_result}
+
+                        Explain the result to the user in a clear and useful way.
+                        """
+                    }
+                ]
+                )
+
+                answer = response["message"]["content"]
+                answer = answer.replace("`", "")
+                sl.write(answer)
+
+            except Exception:
+                sl.error("Could not connect to Ollama")
 
     if numeric_columns:
         sl.subheader("Data Visualizations")
