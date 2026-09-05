@@ -4,16 +4,14 @@ Streamlit: Frontend
 Pandas: Interaction with tabular data
 Numpy: Data operations
 Matplotlib: Grpahs
-OpenAI: Connect to LLM
+Ollama: local free LLM
 '''
 
 import streamlit as sl
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
-from openai import OpenAI
+import ollama
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 sl.set_page_config(
     page_title = "AI-CSV",
@@ -66,21 +64,30 @@ if file is not None:
         placeholder="e.g. What is the average revenue?"
     )
 
-    if question:
-        response = client.responses.create(
-            model = "gpt-5-mini",
-            input = f"""
-You are an AI called AI-CSV.
-The user uploaded a .csv dataset.
-Dataset columns:{df.columns.tolist()}
-Statistical summary:{stats}
-User question:{question}
-Answer the user's question clearly and concisely.
-If the provided information is insufficient to answer the question,
-say that you cannot determine the answer from the available information.
+    response = ollama.chat(
+    model="llama3.2",
+    messages=[{
+            "role": "system",
+            "content": """You are AI-CSV, an AI data analysis assistant.
+            Explain data analysis results clearly and concisely.
+            Only use the information provided to you.
+            Never invent numbers or statistics."""
+        },
+        {
+            "role": "user",
+            "content": f"""
+            Dataset columns: {df.columns.tolist()}
+            Statistical summary:{stats}
+            User question:{question}
+
+            Explain the result to the user in a clear and useful way.
             """
-        )
-        sl.write(response.output_text)
+        }
+    ]
+    )
+
+    answer = response["message"]["content"]
+    sl.write(answer)
 
     if numeric_columns:
         sl.subheader("Data Visualizations")
