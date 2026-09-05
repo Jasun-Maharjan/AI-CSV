@@ -56,8 +56,15 @@ if file is not None:
         "missing_values" : int(df.isnull().sum().sum()),
         "numeric_columns" : numeric_columns
     }
-    
+
     stats = df.describe().to_string()
+
+    sl.subheader("Ask AI")
+
+    question = sl.text_input(
+        "Ask a question about your dataset:",
+        placeholder="e.g. What is the average revenue?"
+    )
 
     if numeric_columns:
         sl.subheader("Data Visualizations")
